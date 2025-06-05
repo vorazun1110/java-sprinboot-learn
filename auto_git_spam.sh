@@ -1,22 +1,18 @@
 #!/bin/bash
 
-# Configuration
-INTERVAL_SECONDS=30                  # Delay between commits
-MAX_COMMITS=10                       # Total number of commits to make
-TARGET_FILE="spam_log.java"         # File to modify each time
-COMMIT_MESSAGE="auto commit for green square"
+FILE="spam_log.txt"
+MIN_COMMITS=25
+MAX_COMMITS=45
+COMMITS=$((RANDOM % (MAX_COMMITS - MIN_COMMITS + 1) + MIN_COMMITS))
 
-echo "🚀 Starting Git commit spammer for $MAX_COMMITS commits. Interval: $INTERVAL_SECONDS seconds."
+echo "Starting $COMMITS commits every ~5 mins for up to 6 hours."
 
-for ((i=1; i<=MAX_COMMITS; i++))
-do
-  echo "// commit #$i at $(date)" >> $TARGET_FILE
-  git add .
-  git commit -m "$COMMIT_MESSAGE #$i - $(date)"
-  git push
+for ((i=1; i<=COMMITS; i++)); do
+  echo "// commit $i at $(date)" >> $FILE
+  git add $FILE
+  git commit -m "commit $i - $(date '+%Y-%m-%d %H:%M:%S')"
 
-  echo "✅ Commit #$i pushed. Sleeping for $INTERVAL_SECONDS seconds..."
-  sleep $INTERVAL_SECONDS
+  JITTER=$((RANDOM % 61)) # random delay between 0 and 60 seconds
+  echo "Sleeping for $((300 + JITTER)) seconds..." # 5 mins + jitter
+  sleep $((300 + JITTER))
 done
-
-echo "🎉 Completed $MAX_COMMITS commits. Exiting script."

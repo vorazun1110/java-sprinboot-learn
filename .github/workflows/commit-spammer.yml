@@ -1,0 +1,54 @@
+name: Long Running Commit Spammer
+
+on:
+  schedule:
+    - cron: '10 5 * * *' # Run daily at 05:10 UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  spam-commits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # Max 6 hours per GitHub Actions limitation
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Git Identity
+        run: |
+          git config user.name "vorazun1110"
+          git config user.email "lhagwadashka1110@gmail.com"
+
+      - name: Create scripts directory if not exist
+        run: mkdir -p scripts
+
+      - name: Write spam_commit.sh
+        run: |
+          cat << 'EOF' > scripts/spam_commit.sh
+          #!/bin/bash
+          FILE="spam_log.txt"
+          MIN_COMMITS=60
+          MAX_COMMITS=72
+          COMMITS=$((RANDOM % (MAX_COMMITS - MIN_COMMITS + 1) + MIN_COMMITS))
+
+          echo "Starting $COMMITS commits spaced by ~5 minutes for up to 6 hours."
+
+          for ((i=1; i<=COMMITS; i++)); do
+            echo "// commit $i at \$(date)" >> \$FILE
+            git add \$FILE
+            git commit -m "spam commit \$i - \$(date '+%Y-%m-%d %H:%M:%S')"
+
+            JITTER=\$((RANDOM % 61)) # jitter: 0–60 seconds
+            echo "Sleeping for \$((300 + JITTER)) seconds..."
+            sleep \$((300 + JITTER))
+          done
+          EOF
+
+      - name: Make script executable
+        run: chmod +x scripts/spam_commit.sh
+
+      - name: Execute commit script
+        run: ./scripts/spam_commit.sh
+
+      - name: Push All Commits
+        run: git push
