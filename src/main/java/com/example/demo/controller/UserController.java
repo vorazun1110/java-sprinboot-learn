@@ -42,5 +42,3 @@ public class UserController {
         service.delete(id);
     }
 }
-
-//commit -17
